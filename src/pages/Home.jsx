@@ -23,18 +23,20 @@ export default function Home() {
     ? '/assets/SahanaPotrait-BTdUvp-y.mp4'
     : '/assets/SHLP-L2SpFDux.mp4';
 
+  const effectiveMuted = isMobile ? true : isMuted;
+
   useEffect(() => {
     if (videoRef.current) {
-      videoRef.current.muted = isMuted;
+      videoRef.current.muted = effectiveMuted;
     }
-  }, [isMuted, videoSrc]);
+  }, [effectiveMuted, videoSrc]);
 
   const toggleMute = () => {
+    if (isMobile) return;
     if (videoRef.current) {
       const nextMuted = !videoRef.current.muted;
       videoRef.current.muted = nextMuted;
       if (!nextMuted) {
-        // When unmuting for the first time, restart playback at 0s to keep audio and video 100% in sync
         try {
           videoRef.current.currentTime = 0;
           videoRef.current.play().catch(() => {});
@@ -68,7 +70,7 @@ export default function Home() {
             key={videoSrc}
             src={videoSrc}
             autoPlay
-            muted={isMuted}
+            muted={effectiveMuted}
             loop
             playsInline
             preload="auto"
@@ -84,13 +86,15 @@ export default function Home() {
             }}
           />
 
-          <button
-            className="sound-btn"
-            onClick={toggleMute}
-            aria-label={isMuted ? 'Unmute' : 'Mute'}
-          >
-            {isMuted ? '🔇' : '🔊'}
-          </button>
+          {!isMobile && (
+            <button
+              className="sound-btn"
+              onClick={toggleMute}
+              aria-label={isMuted ? 'Unmute' : 'Mute'}
+            >
+              {isMuted ? '🔇' : '🔊'}
+            </button>
+          )}
         </div>
 
         <div className="container artist-hero-content" data-aos="zoom-out">
