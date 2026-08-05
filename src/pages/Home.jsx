@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import YoutubeEmbed from '../components/YoutubeEmbed.jsx';
 import SpotifyEmbed from '../components/SpotifyEmbed.jsx';
@@ -6,21 +6,36 @@ import MemoirGallery from '../components/MemoirGallery.jsx';
 
 export default function Home() {
   const [isMuted, setIsMuted] = useState(true);
-  const desktopVideoRef = useRef(null);
-  const mobileVideoRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  );
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const videoSrc = isMobile
+    ? '/assets/SahanaPotrait-BTdUvp-y.mp4'
+    : '/assets/SHLP-L2SpFDux.mp4';
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = isMuted;
+    }
+  }, [isMuted, videoSrc]);
 
   const toggleMute = () => {
-    const toggle = (ref) => {
-      if (ref.current) {
-        ref.current.muted = !ref.current.muted;
-      }
-    };
-    toggle(desktopVideoRef);
-    toggle(mobileVideoRef);
-    if (desktopVideoRef.current) {
-      setIsMuted(desktopVideoRef.current.muted);
-    } else if (mobileVideoRef.current) {
-      setIsMuted(mobileVideoRef.current.muted);
+    if (videoRef.current) {
+      const nextMuted = !videoRef.current.muted;
+      videoRef.current.muted = nextMuted;
+      setIsMuted(nextMuted);
+    } else {
+      setIsMuted((prev) => !prev);
     }
   };
 
@@ -40,25 +55,15 @@ export default function Home() {
           }}
         >
           <video
-            ref={desktopVideoRef}
+            ref={videoRef}
+            key={videoSrc}
             autoPlay
-            muted
+            muted={isMuted}
             loop
             playsInline
-            className="hero-video-bg d-none d-md-block"
+            className="hero-video-bg"
           >
-            <source src="/assets/SHLP-L2SpFDux.mp4" type="video/mp4" />
-          </video>
-
-          <video
-            ref={mobileVideoRef}
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="hero-video-bg d-block d-md-none"
-          >
-            <source src="/assets/SahanaPotrait-BTdUvp-y.mp4" type="video/mp4" />
+            <source src={videoSrc} type="video/mp4" />
           </video>
 
           <div
