@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import YoutubeEmbed from '../components/YoutubeEmbed.jsx';
 import SpotifyEmbed from '../components/SpotifyEmbed.jsx';
@@ -6,47 +6,29 @@ import MemoirGallery from '../components/MemoirGallery.jsx';
 
 export default function Home() {
   const [isMuted, setIsMuted] = useState(true);
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== 'undefined' ? window.innerWidth < 768 : false
-  );
-  const videoRef = useRef(null);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const videoSrc = isMobile
-    ? '/assets/SahanaPotrait-BTdUvp-y.mp4'
-    : '/assets/SHLP-L2SpFDux.mp4';
-
-  const effectiveMuted = isMobile ? true : isMuted;
-
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.muted = effectiveMuted;
-    }
-  }, [effectiveMuted, videoSrc]);
+  const desktopVideoRef = useRef(null);
+  const mobileVideoRef = useRef(null);
 
   const toggleMute = () => {
-    if (isMobile) return;
-    if (videoRef.current) {
-      const nextMuted = !videoRef.current.muted;
-      videoRef.current.muted = nextMuted;
-      if (!nextMuted) {
-        try {
-          videoRef.current.currentTime = 0;
-          videoRef.current.play().catch(() => {});
-        } catch (e) {
-          // ignore seek errors if any
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      if (mobileVideoRef.current) {
+        const nextMuted = !mobileVideoRef.current.muted;
+        mobileVideoRef.current.muted = nextMuted;
+        if (desktopVideoRef.current) {
+          desktopVideoRef.current.muted = true;
         }
+        setIsMuted(nextMuted);
       }
-      setIsMuted(nextMuted);
     } else {
-      setIsMuted((prev) => !prev);
+      if (desktopVideoRef.current) {
+        const nextMuted = !desktopVideoRef.current.muted;
+        desktopVideoRef.current.muted = nextMuted;
+        if (mobileVideoRef.current) {
+          mobileVideoRef.current.muted = true;
+        }
+        setIsMuted(nextMuted);
+      }
     }
   };
 
@@ -66,17 +48,25 @@ export default function Home() {
           }}
         >
           <video
-            ref={videoRef}
-            key={videoSrc}
-            src={videoSrc}
+            ref={desktopVideoRef}
             autoPlay
-            muted={effectiveMuted}
+            muted
             loop
             playsInline
-            preload="auto"
-            className="hero-video-bg"
+            className="hero-video-bg d-none d-md-block"
           >
-            <source src={videoSrc} type="video/mp4" />
+            <source src="/assets/SHLP-L2SpFDux.mp4" type="video/mp4" />
+          </video>
+
+          <video
+            ref={mobileVideoRef}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="hero-video-bg d-block d-md-none"
+          >
+            <source src="/assets/SahanaPotrait-BTdUvp-y.mp4" type="video/mp4" />
           </video>
 
           <div
@@ -86,15 +76,13 @@ export default function Home() {
             }}
           />
 
-          {!isMobile && (
-            <button
-              className="sound-btn"
-              onClick={toggleMute}
-              aria-label={isMuted ? 'Unmute' : 'Mute'}
-            >
-              {isMuted ? '🔇' : '🔊'}
-            </button>
-          )}
+          <button
+            className="sound-btn"
+            onClick={toggleMute}
+            aria-label={isMuted ? 'Unmute' : 'Mute'}
+          >
+            {isMuted ? '🔇' : '🔊'}
+          </button>
         </div>
 
         <div className="container artist-hero-content" data-aos="zoom-out">
