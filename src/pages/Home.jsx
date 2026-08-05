@@ -33,6 +33,15 @@ export default function Home() {
     if (videoRef.current) {
       const nextMuted = !videoRef.current.muted;
       videoRef.current.muted = nextMuted;
+      if (!nextMuted) {
+        // When unmuting for the first time, restart playback at 0s to keep audio and video 100% in sync
+        try {
+          videoRef.current.currentTime = 0;
+          videoRef.current.play().catch(() => {});
+        } catch (e) {
+          // ignore seek errors if any
+        }
+      }
       setIsMuted(nextMuted);
     } else {
       setIsMuted((prev) => !prev);
@@ -57,10 +66,12 @@ export default function Home() {
           <video
             ref={videoRef}
             key={videoSrc}
+            src={videoSrc}
             autoPlay
             muted={isMuted}
             loop
             playsInline
+            preload="auto"
             className="hero-video-bg"
           >
             <source src={videoSrc} type="video/mp4" />
